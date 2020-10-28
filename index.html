@@ -19,8 +19,17 @@
 		color: #0d0d0d;
 		background-color: #fff;
 		width: 100%;
-		max-width: 100%;
+		max-width: calc(100% - 8px);
 		margin: 0;
+		box-shadow: 8px 8px 0 0 #582c8340;
+		margin-bottom: 8px;
+	}
+	.collapsible {
+		border-color: #ede9f2;
+		box-shadow: 8px 8px 0 0 #582c830a;
+		border-width: 1px;
+		border-color: #582c8340;
+		margin-right: 8px;
 	}
 	.collapsible__teaser{
 		cursor: default !important;
@@ -35,8 +44,14 @@
 		font-family: Roboto Slab,Ubuntu,sans-serif;
 		font-weight: 400;
 	}
+	.collapsible__content strong{
+		font-weight: 900;
+	}
+	.collapsible__content img{
+		max-width: 100%;
+	}
 	.collapsible__content p a:hover {
-			text-decoration: underline;
+		text-decoration: underline;
 	}
 	.collapsible__content li,
 	.collapsible__content ol{
@@ -328,7 +343,7 @@
 			
 			const resultElement = document.createElement('div')
 			resultElement.innerHTML = `
-			<section class="collapsible collapsible-height-small"><div class="collapsible__teaser has-background has-light-purple-background-color has-text-color has-purple-color collapsible__teaser-image-none"><div class="collapsible__teaser__content"><h3>${result.content.question}</h3> </div> </div> <div class="collapsible__content collapsible__content__expanded" style=""><p class="paragraph">${answer}</p></div></section>
+			<section class="collapsible collapsible-height-small"><div class="collapsible__teaser has-background has-text-color has-purple-color collapsible__teaser-image-none"><div class="collapsible__teaser__content"><h3>${result.content.question}</h3> </div> </div> <div class="collapsible__content collapsible__content__expanded" style=""><p class="paragraph">${answer}</p></div></section>
 		`
 			resultsElement.append(resultElement)
 		}
