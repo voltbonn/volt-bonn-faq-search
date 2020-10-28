@@ -36,7 +36,7 @@
 		font-weight: 400;
 	}
 	.collapsible__content p a:hover {
-	    text-decoration: underline;
+			text-decoration: underline;
 	}
 	.collapsible__content li,
 	.collapsible__content ol{
@@ -93,72 +93,72 @@
 	let trained_data = null
 	
 	function calculateLevDistance(src, tgt) {
-	  var realCost;
-	  
-	  var srcLength = src.length,
-	    tgtLength = tgt.length,
-	    tempString, tempLength; // for swapping
-	  
-	  var resultMatrix = [];
-	    resultMatrix[0] = []; // Multi dimensional
-	  
-	  // To limit the space in minimum of source and target,
-	  // we make sure that srcLength is greater than tgtLength
-	  if (srcLength < tgtLength) {
-	    tempString = src; src = tgt; tgt = tempString;
-	    tempLength = srcLength; srcLength = tgtLength; tgtLength = tempLength;
-	  }
-	  
-	  for (var c = 0; c < tgtLength+1; c++) {
-	    resultMatrix[0][c] = c;
-	  }
-	  
-	  for (var i = 1; i < srcLength+1; i++) {
-	    resultMatrix[i] = [];
-	    resultMatrix[i][0] = i;
-	    for (var j = 1; j < tgtLength+1; j++) {
-	      realCost = (src.charAt(i-1) == tgt.charAt(j-1))? 0: 1;
-	      resultMatrix[i][j] = Math.min(
-	        resultMatrix[i-1][j]+1,
-	        resultMatrix[i][j-1]+1,
-	        resultMatrix[i-1][j-1] + realCost // same logic as our previous example.
-	      ); 
-	    }
-	  }
-	  
-	  return resultMatrix[srcLength][tgtLength];
+		var realCost;
+		
+		var srcLength = src.length,
+			tgtLength = tgt.length,
+			tempString, tempLength; // for swapping
+		
+		var resultMatrix = [];
+			resultMatrix[0] = []; // Multi dimensional
+		
+		// To limit the space in minimum of source and target,
+		// we make sure that srcLength is greater than tgtLength
+		if (srcLength < tgtLength) {
+			tempString = src; src = tgt; tgt = tempString;
+			tempLength = srcLength; srcLength = tgtLength; tgtLength = tempLength;
+		}
+		
+		for (var c = 0; c < tgtLength+1; c++) {
+			resultMatrix[0][c] = c;
+		}
+		
+		for (var i = 1; i < srcLength+1; i++) {
+			resultMatrix[i] = [];
+			resultMatrix[i][0] = i;
+			for (var j = 1; j < tgtLength+1; j++) {
+				realCost = (src.charAt(i-1) == tgt.charAt(j-1))? 0: 1;
+				resultMatrix[i][j] = Math.min(
+					resultMatrix[i-1][j]+1,
+					resultMatrix[i][j-1]+1,
+					resultMatrix[i-1][j-1] + realCost // same logic as our previous example.
+				); 
+			}
+		}
+		
+		return resultMatrix[srcLength][tgtLength];
 	}
 	
 	// Factory returning a function that converts a value string to n-grams.
 	function nGram(n) {
-	  if (typeof n !== 'number' || isNaN(n) || n < 1 || n === Infinity) {
-	    throw new Error('`' + n + '` is not a valid argument for n-gram')
-	  }
+		if (typeof n !== 'number' || isNaN(n) || n < 1 || n === Infinity) {
+			throw new Error('`' + n + '` is not a valid argument for n-gram')
+		}
 	
-	  return grams
+		return grams
 	
-	  // Create n-grams from a given value.
-	  function grams(value) {
-	    var nGrams = []
-	    var index
+		// Create n-grams from a given value.
+		function grams(value) {
+			var nGrams = []
+			var index
 	
-	    if (value === null || value === undefined) {
-	      return nGrams
-	    }
+			if (value === null || value === undefined) {
+				return nGrams
+			}
 	
-	    value = value.slice ? value : String(value)
-	    index = value.length - n + 1
+			value = value.slice ? value : String(value)
+			index = value.length - n + 1
 	
-	    if (index < 1) {
-	      return nGrams
-	    }
+			if (index < 1) {
+				return nGrams
+			}
 	
-	    while (index--) {
-	      nGrams[index] = value.slice(index, index + n)
-	    }
+			while (index--) {
+				nGrams[index] = value.slice(index, index + n)
+			}
 	
-	    return nGrams
-	  }
+			return nGrams
+		}
 	}
 	
 	function tokenize(text){
