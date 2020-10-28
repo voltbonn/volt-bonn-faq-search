@@ -1,7 +1,7 @@
 <!--
-# Volt Bonn FAQ Search
-- Geschrieben für volt-bonn.de
-- JSFiddle Version: https://jsfiddle.net/thomasrosen/3mkpbxj5/
+	# Volt Bonn FAQ Search
+	- Geschrieben für volt-bonn.de
+	- JSFiddle Version: https://jsfiddle.net/thomasrosen/3mkpbxj5/
 -->
 
 <div id="FaqHiddenContainer"></div>
@@ -9,335 +9,333 @@
 <div id="FaqResultsContainer"></div>
 
 <style>
-.faq_filter_input{
-	padding: 1.2rem; /* 1.2rem 3rem*/
-	border: 1px solid #582c83;
-	line-height: 1;
-	font-size: 21px;
-	font-family: Roboto Slab,Ubuntu,sans-serif;
-	font-weight: 400;
-	color: #0d0d0d;
-	background-color: #fff;
-	width: 100%;
-	max-width: 100%;
-	margin: 0;
-}
-.collapsible__teaser{
-	cursor: default !important;
-}
-.collapsible__teaser__content{
-	padding: 16px;
-}
-.collapsible__content p{
-	margin: 16px auto;
-	position: relative;
-	z-index: 30;
-	font-family: Roboto Slab,Ubuntu,sans-serif;
-	font-weight: 400;
-}
-.collapsible__content p a:hover {
-    text-decoration: underline;
-}
-.collapsible__content li,
-.collapsible__content ol{
-	margin: 16px auto;
-	box-sizing: border-box;
-	position: relative;
-	z-index: 30;
-	font-family: Roboto Slab,Ubuntu,sans-serif;
-	font-weight: 400;
-}
+	.faq_filter_input{
+		padding: 1.2rem; /* 1.2rem 3rem*/
+		border: 1px solid #582c83;
+		line-height: 1;
+		font-size: 21px;
+		font-family: Roboto Slab,Ubuntu,sans-serif;
+		font-weight: 400;
+		color: #0d0d0d;
+		background-color: #fff;
+		width: 100%;
+		max-width: 100%;
+		margin: 0;
+	}
+	.collapsible__teaser{
+		cursor: default !important;
+	}
+	.collapsible__teaser__content{
+		padding: 16px;
+	}
+	.collapsible__content p{
+		margin: 16px auto;
+		position: relative;
+		z-index: 30;
+		font-family: Roboto Slab,Ubuntu,sans-serif;
+		font-weight: 400;
+	}
+	.collapsible__content p a:hover {
+	    text-decoration: underline;
+	}
+	.collapsible__content li,
+	.collapsible__content ol{
+		margin: 16px auto;
+		box-sizing: border-box;
+		position: relative;
+		z-index: 30;
+		font-family: Roboto Slab,Ubuntu,sans-serif;
+		font-weight: 400;
+	}
 </style>
 
 <script>
+	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json-in-script&callback=train'
 	
-const json_data_url = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json-in-script&callback=train'
-
-
-const FaqSearchContainer = document.getElementById('FaqSearchContainer')
-FaqSearchContainer.style.display = 'none'
-const inputElement = document.createElement('input')
-inputElement.classList.add('faq_filter_input')
-// inputElement.classList.add('volt-newsletter-signup__email')
-inputElement.type = 'search'
-inputElement.placeholder = 'Suchen…'
-inputElement.addEventListener('keydown', search)
-inputElement.addEventListener('keyup', search)
-FaqSearchContainer.append(inputElement)
 	
-const FaqResultsContainer = document.getElementById('FaqResultsContainer')
-const resultsElement = document.createElement('div')
-// resultsElement.innerHTML = 'Loadin…'
-FaqResultsContainer.append(resultsElement)
-
-const FaqHiddenContainer = document.getElementById('FaqHiddenContainer')
-FaqHiddenContainer.style.display = 'none'
-
-const snowdownElement = document.createElement('script')
-snowdownElement.src = 'https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js'
-FaqHiddenContainer.append(snowdownElement)
-
-const loadDataElement = document.createElement('script')
-loadDataElement.src = json_data_url
-FaqHiddenContainer.append(loadDataElement)
-
-
-
-//////////////////////////////////
-
-
-
-
-const stopwords = 'ist die der das den ein einer eine im in es beu und'.split(' ')
-
-let trained_data = null
-
-function calculateLevDistance(src, tgt) {
-  var realCost;
-  
-  var srcLength = src.length,
-    tgtLength = tgt.length,
-    tempString, tempLength; // for swapping
-  
-  var resultMatrix = [];
-    resultMatrix[0] = []; // Multi dimensional
-  
-  // To limit the space in minimum of source and target,
-  // we make sure that srcLength is greater than tgtLength
-  if (srcLength < tgtLength) {
-    tempString = src; src = tgt; tgt = tempString;
-    tempLength = srcLength; srcLength = tgtLength; tgtLength = tempLength;
-  }
-  
-  for (var c = 0; c < tgtLength+1; c++) {
-    resultMatrix[0][c] = c;
-  }
-  
-  for (var i = 1; i < srcLength+1; i++) {
-    resultMatrix[i] = [];
-    resultMatrix[i][0] = i;
-    for (var j = 1; j < tgtLength+1; j++) {
-      realCost = (src.charAt(i-1) == tgt.charAt(j-1))? 0: 1;
-      resultMatrix[i][j] = Math.min(
-        resultMatrix[i-1][j]+1,
-        resultMatrix[i][j-1]+1,
-        resultMatrix[i-1][j-1] + realCost // same logic as our previous example.
-      ); 
-    }
-  }
-  
-  return resultMatrix[srcLength][tgtLength];
-}
-
-// Factory returning a function that converts a value string to n-grams.
-function nGram(n) {
-  if (typeof n !== 'number' || isNaN(n) || n < 1 || n === Infinity) {
-    throw new Error('`' + n + '` is not a valid argument for n-gram')
-  }
-
-  return grams
-
-  // Create n-grams from a given value.
-  function grams(value) {
-    var nGrams = []
-    var index
-
-    if (value === null || value === undefined) {
-      return nGrams
-    }
-
-    value = value.slice ? value : String(value)
-    index = value.length - n + 1
-
-    if (index < 1) {
-      return nGrams
-    }
-
-    while (index--) {
-      nGrams[index] = value.slice(index, index + n)
-    }
-
-    return nGrams
-  }
-}
-
-function tokenize(text){
-	let tokens = text
-	.replace(/\.(org|de|net|com)/g, '')
-	.replace(/([^\s])[-–—_.:*]([^\s])/g, `$1$2`)
-	.replace(/(\n|\t|[\.&-\/\!,;<>[\]():"'’„“”?=@*–%#])/g, ' ')
-	.replace(/\s+/g, ' ')
-	.split(' ')
-	.filter(Boolean)
-	.map(word => word.toLowerCase())
-	//.filter(word => !stopwords.includes(word))
-
-	return tokens
-}
-
-function getAllNgrams(items){
-	let new_ngrams = []
-	for (let i=1; i<items.length+1; i+=1) {
-		new_ngrams = new_ngrams.concat(nGram(i)(items))
+	const FaqSearchContainer = document.getElementById('FaqSearchContainer')
+	FaqSearchContainer.style.display = 'none'
+	const inputElement = document.createElement('input')
+	inputElement.classList.add('faq_filter_input')
+	// inputElement.classList.add('volt-newsletter-signup__email')
+	inputElement.type = 'search'
+	inputElement.placeholder = 'Suchen…'
+	inputElement.addEventListener('keydown', search)
+	inputElement.addEventListener('keyup', search)
+	FaqSearchContainer.append(inputElement)
+		
+	const FaqResultsContainer = document.getElementById('FaqResultsContainer')
+	const resultsElement = document.createElement('div')
+	// resultsElement.innerHTML = 'Loadin…'
+	FaqResultsContainer.append(resultsElement)
+	
+	const FaqHiddenContainer = document.getElementById('FaqHiddenContainer')
+	FaqHiddenContainer.style.display = 'none'
+	
+	const snowdownElement = document.createElement('script')
+	snowdownElement.src = 'https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js'
+	FaqHiddenContainer.append(snowdownElement)
+	
+	const loadDataElement = document.createElement('script')
+	loadDataElement.src = _json_data_url_
+	FaqHiddenContainer.append(loadDataElement)
+	
+	
+	
+	//////////////////////////////////
+	
+	
+	
+	
+	const stopwords = 'ist die der das den ein einer eine im in es beu und'.split(' ')
+	
+	let trained_data = null
+	
+	function calculateLevDistance(src, tgt) {
+	  var realCost;
+	  
+	  var srcLength = src.length,
+	    tgtLength = tgt.length,
+	    tempString, tempLength; // for swapping
+	  
+	  var resultMatrix = [];
+	    resultMatrix[0] = []; // Multi dimensional
+	  
+	  // To limit the space in minimum of source and target,
+	  // we make sure that srcLength is greater than tgtLength
+	  if (srcLength < tgtLength) {
+	    tempString = src; src = tgt; tgt = tempString;
+	    tempLength = srcLength; srcLength = tgtLength; tgtLength = tempLength;
+	  }
+	  
+	  for (var c = 0; c < tgtLength+1; c++) {
+	    resultMatrix[0][c] = c;
+	  }
+	  
+	  for (var i = 1; i < srcLength+1; i++) {
+	    resultMatrix[i] = [];
+	    resultMatrix[i][0] = i;
+	    for (var j = 1; j < tgtLength+1; j++) {
+	      realCost = (src.charAt(i-1) == tgt.charAt(j-1))? 0: 1;
+	      resultMatrix[i][j] = Math.min(
+	        resultMatrix[i-1][j]+1,
+	        resultMatrix[i][j-1]+1,
+	        resultMatrix[i-1][j-1] + realCost // same logic as our previous example.
+	      ); 
+	    }
+	  }
+	  
+	  return resultMatrix[srcLength][tgtLength];
 	}
-	return new_ngrams
-}
-
-function train(data){
-	trained_data = data.feed.entry
-	.map(entry => ({
-		question: entry['gsx$question']['$t'] || '',
-		answer: entry['gsx$answer']['$t'] || '',
-		similarQuestions: (entry['gsx$similarquestions']['$t'] || '').split('?').filter(Boolean).map(q=>q.trim()+'?'),
-	}))
-	.filter(entry => entry.question !== '' && entry.answer !== '')
-	.map(entry => ({
-		question: entry.question,
-		answer: entry.answer,
-		similarQuestions: [...new Set([
-			tokenize(entry.question),
-			...entry.similarQuestions.map(sq => tokenize(sq))
-		])],
-	}))
-	.reduce((data,entry) => {
 	
-		if (!(!!data.questions[entry.question])) {
-			data.questions[entry.question] = {
-				question: entry.question,
-				answer: entry.answer,
+	// Factory returning a function that converts a value string to n-grams.
+	function nGram(n) {
+	  if (typeof n !== 'number' || isNaN(n) || n < 1 || n === Infinity) {
+	    throw new Error('`' + n + '` is not a valid argument for n-gram')
+	  }
+	
+	  return grams
+	
+	  // Create n-grams from a given value.
+	  function grams(value) {
+	    var nGrams = []
+	    var index
+	
+	    if (value === null || value === undefined) {
+	      return nGrams
+	    }
+	
+	    value = value.slice ? value : String(value)
+	    index = value.length - n + 1
+	
+	    if (index < 1) {
+	      return nGrams
+	    }
+	
+	    while (index--) {
+	      nGrams[index] = value.slice(index, index + n)
+	    }
+	
+	    return nGrams
+	  }
+	}
+	
+	function tokenize(text){
+		let tokens = text
+		.replace(/\.(org|de|net|com)/g, '')
+		.replace(/([^\s])[-–—_.:*]([^\s])/g, `$1$2`)
+		.replace(/(\n|\t|[\.&-\/\!,;<>[\]():"'’„“”?=@*–%#])/g, ' ')
+		.replace(/\s+/g, ' ')
+		.split(' ')
+		.filter(Boolean)
+		.map(word => word.toLowerCase())
+		//.filter(word => !stopwords.includes(word))
+	
+		return tokens
+	}
+	
+	function getAllNgrams(items){
+		let new_ngrams = []
+		for (let i=1; i<items.length+1; i+=1) {
+			new_ngrams = new_ngrams.concat(nGram(i)(items))
+		}
+		return new_ngrams
+	}
+	
+	function train(data){
+		trained_data = data.feed.entry
+		.map(entry => ({
+			question: entry['gsx$question']['$t'] || '',
+			answer: entry['gsx$answer']['$t'] || '',
+			similarQuestions: (entry['gsx$similarquestions']['$t'] || '').split('?').filter(Boolean).map(q=>q.trim()+'?'),
+		}))
+		.filter(entry => entry.question !== '' && entry.answer !== '')
+		.map(entry => ({
+			question: entry.question,
+			answer: entry.answer,
+			similarQuestions: [...new Set([
+				tokenize(entry.question),
+				...entry.similarQuestions.map(sq => tokenize(sq))
+			])],
+		}))
+		.reduce((data,entry) => {
+		
+			if (!(!!data.questions[entry.question])) {
+				data.questions[entry.question] = {
+					question: entry.question,
+					answer: entry.answer,
+				}
+			}
+			
+			for (const question of entry.similarQuestions) {
+				for (const token of question) {
+					data.tokens.add(token)
+				}
+			}
+			
+			const phrases = entry.similarQuestions.flatMap(ts => getAllNgrams(ts).map(ng => ng.join(' ')))
+			.filter(phrase => !stopwords.includes(phrase))
+			
+			for (const phrase of phrases) {
+				if (!(!!data.phrases2questions[phrase])) {
+					data.phrases2questions[phrase] = new Set()
+				}
+				data.phrases2questions[phrase].add(entry.question)
+			}
+			
+			return data
+		}, {
+			questions: {},
+			phrases2questions: {},
+			tokens: new Set(),
+		})
+		
+		for (const key in trained_data.phrases2questions) {
+			trained_data.phrases2questions[key] = [...trained_data.phrases2questions[key]]
+		}
+		trained_data.tokens = [...trained_data.tokens]
+	
+		// finished loading
+		FaqSearchContainer.style.display = 'block'
+		
+		printResults(predict('', 9999))
+	}
+	
+	function bestMatch(inputToken, possibleTokens){
+		
+		if (possibleTokens.includes(inputToken)) {
+			return inputToken
+		}
+		
+		const inputTokenLength = inputToken.length*0.4 // to prevent every word from matching
+	
+		let shortestDistance = Infinity
+		let bestMatchingToken = null
+		for (const token of possibleTokens) {
+			const thisDistance = calculateLevDistance(inputToken, token)
+			if (thisDistance < inputTokenLength && thisDistance < shortestDistance) {
+				shortestDistance = thisDistance
+				bestMatchingToken = token
 			}
 		}
 		
-		for (const question of entry.similarQuestions) {
-			for (const token of question) {
-				data.tokens.add(token)
+		return bestMatchingToken
+	}
+	
+	function predict(input,howManyResults){	
+		if (trained_data === null) {
+			return []
+		}
+		
+		input = tokenize(input)
+		.map(token => {
+			if (!trained_data.tokens.includes(token)) {
+				return bestMatch(token,trained_data.tokens)
 			}
-		}
+			return token
+		})
 		
-		const phrases = entry.similarQuestions.flatMap(ts => getAllNgrams(ts).map(ng => ng.join(' ')))
-		.filter(phrase => !stopwords.includes(phrase))
-		
-		for (const phrase of phrases) {
-			if (!(!!data.phrases2questions[phrase])) {
-				data.phrases2questions[phrase] = new Set()
+		let phrases = getAllNgrams(input).map(ng => ng.join(' '))
+		.flatMap(phrase => {
+			const best_key = bestMatch(phrase, Object.keys(trained_data.phrases2questions))
+			if (best_key !== null && trained_data.phrases2questions[best_key]) {
+				return trained_data.phrases2questions[best_key]
 			}
-			data.phrases2questions[phrase].add(entry.question)
+			
+			return null
+		})
+		
+		if (phrases.length > 0) {
+			let counts = phrases
+			.reduce((counts,question) => {
+				if (!(!!counts[question])) {
+					counts[question] = 0
+				}
+				counts[question] += 1
+				return counts
+			}, {})
+		
+			counts = Object.entries(counts)
+			.sort((a,b) => b[1] - a[1])
+			
+			return counts
+			.map(entry => ({
+				content: trained_data.questions[entry[0]] || null,
+				score: entry[1],
+			}))
+			.filter(entry => entry.content !== null)
+			.slice(0,howManyResults || 1)
+		}else{
+			return Object.entries(trained_data.questions)
+			.map(entry => ({
+				content: entry[1],
+				score: 0,
+			}))
 		}
 		
-		return data
-	}, {
-		questions: {},
-		phrases2questions: {},
-		tokens: new Set(),
-	})
-	
-	for (const key in trained_data.phrases2questions) {
-		trained_data.phrases2questions[key] = [...trained_data.phrases2questions[key]]
-	}
-	trained_data.tokens = [...trained_data.tokens]
-
-	// finished loading
-	FaqSearchContainer.style.display = 'block'
-	
-	printResults(predict('', 9999))
-}
-
-function bestMatch(inputToken, possibleTokens){
-	
-	if (possibleTokens.includes(inputToken)) {
-		return inputToken
-	}
-	
-	const inputTokenLength = inputToken.length*0.4 // to prevent every word from matching
-
-	let shortestDistance = Infinity
-	let bestMatchingToken = null
-	for (const token of possibleTokens) {
-		const thisDistance = calculateLevDistance(inputToken, token)
-		if (thisDistance < inputTokenLength && thisDistance < shortestDistance) {
-			shortestDistance = thisDistance
-			bestMatchingToken = token
-		}
-	}
-	
-	return bestMatchingToken
-}
-
-function predict(input,howManyResults){	
-	if (trained_data === null) {
 		return []
 	}
 	
-	input = tokenize(input)
-	.map(token => {
-		if (!trained_data.tokens.includes(token)) {
-			return bestMatch(token,trained_data.tokens)
+	function printResults(results) {
+		resultsElement.innerHTML = ''
+		
+		const snowdownConverter = new showdown.Converter()
+	
+		for (const result of results) {
+		
+			const answer = snowdownConverter.makeHtml(result.content.answer)
+			
+			const resultElement = document.createElement('div')
+			resultElement.innerHTML = `
+			<section class="collapsible collapsible-height-small"><div class="collapsible__teaser has-background has-light-purple-background-color has-text-color has-purple-color collapsible__teaser-image-none"><div class="collapsible__teaser__content"><h3>${result.content.question}</h3> </div> </div> <div class="collapsible__content collapsible__content__expanded" style=""><p class="paragraph">${answer}</p></div></section>
+		`
+			resultsElement.append(resultElement)
 		}
-		return token
-	})
+	}
 	
-	let phrases = getAllNgrams(input).map(ng => ng.join(' '))
-	.flatMap(phrase => {
-		const best_key = bestMatch(phrase, Object.keys(trained_data.phrases2questions))
-		if (best_key !== null && trained_data.phrases2questions[best_key]) {
-			return trained_data.phrases2questions[best_key]
+	function search(event){
+		if (trained_data !== null) {
+			printResults(predict(event.target.value, 6))
 		}
-		
-		return null
-	})
-	
-	if (phrases.length > 0) {
-		let counts = phrases
-		.reduce((counts,question) => {
-			if (!(!!counts[question])) {
-				counts[question] = 0
-			}
-			counts[question] += 1
-			return counts
-		}, {})
-	
-		counts = Object.entries(counts)
-		.sort((a,b) => b[1] - a[1])
-		
-		return counts
-		.map(entry => ({
-			content: trained_data.questions[entry[0]] || null,
-			score: entry[1],
-		}))
-		.filter(entry => entry.content !== null)
-		.slice(0,howManyResults || 1)
-	}else{
-		return Object.entries(trained_data.questions)
-		.map(entry => ({
-			content: entry[1],
-			score: 0,
-		}))
 	}
-	
-	return []
-}
-
-function printResults(results) {
-	resultsElement.innerHTML = ''
-	
-	const snowdownConverter = new showdown.Converter()
-
-	for (const result of results) {
-	
-		const answer = snowdownConverter.makeHtml(result.content.answer)
-		
-		const resultElement = document.createElement('div')
-		resultElement.innerHTML = `
-		<section class="collapsible collapsible-height-small"><div class="collapsible__teaser has-background has-light-purple-background-color has-text-color has-purple-color collapsible__teaser-image-none"><div class="collapsible__teaser__content"><h3>${result.content.question}</h3> </div> </div> <div class="collapsible__content collapsible__content__expanded" style=""><p class="paragraph">${answer}</p></div></section>
-	`
-		resultsElement.append(resultElement)
-	}
-}
-
-function search(event){
-	if (trained_data !== null) {
-		printResults(predict(event.target.value, 6))
-	}
-}
-
 </script>
