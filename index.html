@@ -66,7 +66,7 @@
 <script>
 	const _send_logs_ = false
 	const _display_all_by_default_ = false
-	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json-in-script&callback=train'
+	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json'
 	const _log_url_ = 'https://script.google.com/macros/s/AKfycbx8oeeLprgk2fFUc_5tZnE3qWh3n95CJ5T1lm6XUhyxSQV2UTnz/exec'
 	
 	
@@ -93,10 +93,12 @@
 	snowdownElement.src = 'https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js'
 	FaqHiddenContainer.append(snowdownElement)
 	
-	const loadDataElement = document.createElement('script')
-	loadDataElement.src = _json_data_url_
-	FaqHiddenContainer.append(loadDataElement)
-	
+
+	// load data
+	fetch(_json_data_url_)
+	.then(response => response.json())
+	.then(json => train(json))
+	.catch(error => console.error(error))
 	
 	
 	//////////////////////////////////
