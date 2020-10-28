@@ -67,6 +67,7 @@
 <script>
 	const _display_all_by_default_ = false
 	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json-in-script&callback=train'
+	const _log_url_ = 'https://script.google.com/macros/s/AKfycbx8oeeLprgk2fFUc_5tZnE3qWh3n95CJ5T1lm6XUhyxSQV2UTnz/exec'
 	
 	
 	const FaqSearchContainer = document.getElementById('FaqSearchContainer')
@@ -348,10 +349,32 @@
 			resultsElement.append(resultElement)
 		}
 	}
+
+
+
+	var latestQuestion = ''
+	var doit;
+	function askForLogging(question){
+		latestQuestion = question
+	
+		clearTimeout(doit)
+		doit = setTimeout(sendTheLog, 1000)
+	}
+	function sendTheLog(){
+		// Log question to find out what we didn't answer.
+		if (!!_log_url_ && latestQuestion !== '') {
+			fetch(_log_url_+'?path='+encodeURIComponent(window.location.pathname)+'&lang=de&q='+encodeURIComponent(latestQuestion))
+		}
+	}
 	
 	function search(event){
 		if (trained_data !== null) {
-			printResults(predict(event.target.value, 6))
+			const question = event.target.value
+
+			// Print answers.
+			printResults(predict(question, 6))
+
+			askForLogging(question)
 		}
 	}
 </script>
