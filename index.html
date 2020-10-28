@@ -64,6 +64,7 @@
 </style>
 
 <script>
+	const _send_logs_ = false
 	const _display_all_by_default_ = false
 	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json-in-script&callback=train'
 	const _log_url_ = 'https://script.google.com/macros/s/AKfycbx8oeeLprgk2fFUc_5tZnE3qWh3n95CJ5T1lm6XUhyxSQV2UTnz/exec'
@@ -361,7 +362,7 @@
 	}
 	function sendTheLog(){
 		// Log question to find out what we didn't answer.
-		if (!!_log_url_ && latestQuestion !== '') {
+		if (_send_logs_ === true && !!_log_url_ && latestQuestion !== '') {
 			fetch(_log_url_+'?path='+encodeURIComponent(window.location.pathname)+'&lang=de&q='+encodeURIComponent(latestQuestion))
 		}
 	}
