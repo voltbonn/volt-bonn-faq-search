@@ -50,6 +50,7 @@
 </style>
 
 <script>
+	const _display_all_by_default_ = false
 	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json-in-script&callback=train'
 	
 	
@@ -305,7 +306,7 @@
 			}))
 			.filter(entry => entry.content !== null)
 			.slice(0,howManyResults || 1)
-		}else{
+		} else if (_display_all_by_default_) {
 			return Object.entries(trained_data.questions)
 			.map(entry => ({
 				content: entry[1],
