@@ -312,9 +312,17 @@
 		clearTimeout(doit)
 		doit = setTimeout(sendTheLog, 1000)
 	}
+
+	var lastSendQuestion = ''
 	function sendTheLog(){
 		// Log question to find out what we didn't answer.
-		if (_send_logs_ === true && !!_log_url_ && latestQuestion !== '') {
+		if (
+			_send_logs_ === true
+			&& !!_log_url_
+			&& latestQuestion !== ''
+			&& latestQuestion !== lastSendQuestion
+		) {
+			lastSendQuestion = latestQuestion
 			fetch(_log_url_+'?path='+encodeURIComponent(window.location.pathname)+'&lang=de&q='+encodeURIComponent(latestQuestion))
 		}
 	}
