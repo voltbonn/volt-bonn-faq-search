@@ -8,6 +8,7 @@
 <div id="FaqResultsContainer"></div>
 
 <script>
+	const _wanted_languages_ = ['de']
 	const _send_logs_ = false
 	const _display_all_by_default_ = false
 	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json'
@@ -43,7 +44,7 @@
 	// load data
 	fetch(_json_data_url_)
 	.then(response => response.json())
-	.then(json => train(json))
+	.then(json => startFAQ(json))
 	.catch(error => console.error(error))
 	
 	
@@ -148,16 +149,26 @@
 		}
 		return new_ngrams
 	}
-	
-	function train(data){
-		trained_data = data.feed.entry
+
+	function startFAQ(data){
+		data = data.feed.entry
 		.map(entry => ({
 			question: entry['gsx$question']['$t'] || '',
 			answer: entry['gsx$answer']['$t'] || '',
 			similarQuestions: (entry['gsx$similarquestions']['$t'] || '').split('?').filter(Boolean).map(q=>q.trim()+'?'),
+			language: entry['gsx$language']['$t'] || '',
 		}))
-		.filter(entry => entry.question !== '' && entry.answer !== '')
-		.map(entry => ({
+		.filter(entry =>
+			entry.question !== ''
+			&& entry.answer !== ''
+			&& _wanted_languages_.includes(entry.language)
+		)
+
+		train(data)
+	}
+	
+	function train(data){
+		trained_data = data.map(entry => ({
 			question: entry.question,
 			answer: entry.answer,
 			similarQuestions: [...new Set([
