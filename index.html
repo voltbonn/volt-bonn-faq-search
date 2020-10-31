@@ -140,8 +140,10 @@
 	}
 	
 	function getAllNgrams(items){
+		const amount = items.length < 5 ? items.length : 5
+
 		let new_ngrams = []
-		for (let i=1; i<items.length+1; i+=1) {
+		for (let i=1; i<amount+1; i+=1) {
 			new_ngrams = new_ngrams.concat(nGram(i)(items))
 		}
 		return new_ngrams
