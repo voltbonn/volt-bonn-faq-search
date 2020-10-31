@@ -12,6 +12,7 @@
 	const _display_all_by_default_ = false
 	const _json_data_url_ = 'https://spreadsheets.google.com/feeds/list/1-AC5oKyoaAnLdQZLWyh8MdkNhxs_Y2F1DBEXmOFepVk/od6/public/values?alt=json'
 	const _log_url_ = 'https://script.google.com/macros/s/AKfycbx8oeeLprgk2fFUc_5tZnE3qWh3n95CJ5T1lm6XUhyxSQV2UTnz/exec'
+	const _no_results_message_ = 'Keine Ergebnisse!'
 	
 	
 	const FaqSearchContainer = document.getElementById('FaqSearchContainer')
@@ -202,7 +203,7 @@
 		// finished loading
 		FaqSearchContainer.style.display = 'block'
 		
-		printResults(predict('', 9999))
+		printResults('', predict('', 9999))
 	}
 	
 	function bestMatch(inputToken, possibleTokens){
@@ -280,20 +281,24 @@
 		return []
 	}
 	
-	function printResults(results) {
-		resultsElement.innerHTML = ''
-		
-		const snowdownConverter = new showdown.Converter()
-	
-		for (const result of results) {
-		
-			const answer = snowdownConverter.makeHtml(result.content.answer)
+	function printResults(input,results) {
+		if (input.length > 0 && results.length === 0) {
+			resultsElement.innerHTML = `<p class="paragraph">${_no_results_message_}</p>`
+		}else{
+			resultsElement.innerHTML = ''
 			
-			const resultElement = document.createElement('div')
-			resultElement.innerHTML = `
-			<section class="collapsible collapsible-height-small"><div class="collapsible__teaser has-background has-text-color has-purple-color collapsible__teaser-image-none"><div class="collapsible__teaser__content"><h3>${result.content.question}</h3> </div> </div> <div class="collapsible__content collapsible__content__expanded" style=""><p class="paragraph">${answer}</p></div></section>
-		`
-			resultsElement.append(resultElement)
+			const snowdownConverter = new showdown.Converter()
+		
+			for (const result of results) {
+			
+				const answer = snowdownConverter.makeHtml(result.content.answer)
+				
+				const resultElement = document.createElement('div')
+				resultElement.innerHTML = `
+				<section class="collapsible collapsible-height-small"><div class="collapsible__teaser has-background has-text-color has-purple-color collapsible__teaser-image-none"><div class="collapsible__teaser__content"><h3>${result.content.question}</h3> </div> </div> <div class="collapsible__content collapsible__content__expanded" style=""><p class="paragraph">${answer}</p></div></section>
+			`
+				resultsElement.append(resultElement)
+			}
 		}
 	}
 
@@ -319,7 +324,7 @@
 			const question = event.target.value
 
 			// Print answers.
-			printResults(predict(question, 6))
+			printResults(question, predict(question, 6))
 
 			askForLogging(question)
 		}
